@@ -1,0 +1,42 @@
+---
+services:
+  gitlab:
+    # image: gitlab/gitlab-ee:16.4.3-ee.0
+    # image: gitlab/gitlab-ee:16.7.3-ee.0
+    # image: gitlab/gitlab-ee:16.10.1-ee.0
+    image: gitlab/gitlab-ee:16.3.7-ee.0
+    container_name: gitlab
+    restart: unless-stopped
+    hostname: "localhost"
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        # Add any other gitlab.rb configuration here, each on its own line
+        external_url "https://localhost"
+        gitlab_rails['monitoring_whitelist'] = ['0.0.0.0/0']
+        gitlab_rails['initial_root_password'] = 'ZDE4YmM3ODY3ZjY0MDllZjEwNWY5NzFm'
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "./gitlab/config:/etc/gitlab"
+      - "./gitlab/logs:/var/log/gitlab"
+      - "./gitlab/data:/var/opt/gitlab"
+    shm_size: "256m"
+
+  prometheus:
+    container_name: prom
+    image: prom/prometheus
+    restart: unless-stopped
+    volumes:
+      - "./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml"
+    ports:
+      - 9090:9090
+
+  runner:
+    image: gitlab/gitlab-runner
+    container_name: gitlab-runner
+    restart: unless-stopped
+    depends_on:
+      - gitlab
+    volumes:
+      - ./gitlab-runner:/etc/gitlab-runner
